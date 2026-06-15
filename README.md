@@ -19,7 +19,7 @@
 | ------ | ---------------------------- |
 | 프론트 | React 18 + Vite              |
 | 백엔드 | Node.js + Express            |
-| DB     | PostgreSQL + Prisma ORM      |
+| DB     | Turso (libsql/SQLite) + Prisma ORM |
 | 배포   | Render Blueprint (무료 플랜) |
 
 ## 프로젝트 구조
@@ -50,9 +50,17 @@ cp .env.example server/.env
 ```
 
 ```env
-DATABASE_URL="postgresql://user:password@localhost:5432/notepad?schema=public"
+# Turso 연결 정보 (런타임에서 실제 사용)
+TURSO_URL="libsql://your-database-name.turso.io"
+TURSO_TOKEN="your-turso-auth-token"
+# Prisma CLI 전용 더미 값
+DATABASE_URL="file:./dev.db"
 PORT=5000
 ```
+
+> Turso DB와 토큰은 [Turso CLI](https://docs.turso.tech/quickstart) 로 생성합니다:
+> `turso db create notepad` → `turso db show notepad --url` (TURSO_URL),
+> `turso db tokens create notepad` (TURSO_TOKEN).
 
 ### 2. 의존성 설치
 
@@ -60,7 +68,7 @@ PORT=5000
 npm run install:all
 ```
 
-### 3. DB 스키마 적용
+### 3. DB 스키마 적용 (Turso에 테이블 생성)
 
 ```bash
 npm run prisma:push --prefix server
@@ -82,9 +90,10 @@ npm run dev:client   # 프론트 (http://localhost:5173)
 1. 이 저장소를 GitHub 에 푸시합니다.
 2. [Render 대시보드](https://dashboard.render.com) → **New** → **Blueprint** 선택.
 3. 저장소를 연결하면 `render.yaml` 을 자동 인식합니다.
-4. **Apply** 클릭 → 무료 PostgreSQL 과 무료 웹 서비스가 함께 생성됩니다.
-   - `DATABASE_URL` 은 자동 주입됩니다.
-5. 배포가 끝나면 발급된 URL 로 접속합니다.
+4. **Apply** 전에 `TURSO_URL`, `TURSO_TOKEN` 환경 변수를 대시보드에서 입력합니다.
+   (blueprint에 `sync: false` 로 선언되어 있어 값은 직접 넣어야 합니다.)
+5. **Apply** 클릭 → 무료 웹 서비스가 생성되고, 빌드 중 Turso에 스키마가 적용됩니다.
+6. 배포가 끝나면 발급된 URL 로 접속합니다.
 
 > 모든 리소스가 `plan: free` 로 설정되어 있습니다.
 > 무료 웹 서비스는 일정 시간 미사용 시 잠자기 상태가 되어 첫 접속이 느릴 수 있습니다.
