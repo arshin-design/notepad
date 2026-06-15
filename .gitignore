@@ -1,0 +1,23 @@
+# 의존성
+node_modules/
+
+# 환경 변수
+.env
+.env.local
+
+# 빌드 산출물
+client/dist/
+dist/
+
+# 로그
+*.log
+npm-debug.log*
+
+# OS / 에디터
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Prisma
+prisma/*.db

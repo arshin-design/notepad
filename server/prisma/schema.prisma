@@ -1,0 +1,70 @@
+// Prisma 스키마 - PostgreSQL 사용
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 사용자
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  password  String // bcrypt 해시
+  name      String?
+  createdAt DateTime   @default(now())
+
+  notebooks Notebook[]
+  notes     Note[]
+  tags      Tag[]
+}
+
+// 노트북 (폴더)
+model Notebook {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  notes Note[]
+
+  @@index([userId])
+}
+
+// 노트
+model Note {
+  id        String   @id @default(cuid())
+  title     String   @default("제목 없음")
+  content   String   @default("") // 리치 텍스트(HTML)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  notebookId String?
+  notebook   Notebook? @relation(fields: [notebookId], references: [id], onDelete: SetNull)
+
+  tags Tag[]
+
+  @@index([userId])
+  @@index([notebookId])
+}
+
+// 태그
+model Tag {
+  id   String @id @default(cuid())
+  name String
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  notes Note[]
+
+  @@unique([userId, name])
+  @@index([userId])
+}

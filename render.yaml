@@ -1,0 +1,29 @@
+# Render Blueprint - 전부 무료(free) 플랜 사용
+# https://render.com/docs/blueprint-spec
+
+databases:
+  - name: notepad-db
+    plan: free # 무료 PostgreSQL
+    databaseName: notepad
+    user: notepad
+
+services:
+  - type: web
+    name: notepad
+    runtime: node
+    plan: free # 무료 웹 서비스
+    region: singapore # 가까운 리전 (필요 시 변경)
+    buildCommand: npm run render-build
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    envVars:
+      # 무료 DB 연결 문자열 자동 주입
+      - key: DATABASE_URL
+        fromDatabase:
+          name: notepad-db
+          property: connectionString
+      # JWT 비밀키 자동 생성
+      - key: JWT_SECRET
+        generateValue: true
+      - key: NODE_VERSION
+        value: "20"
