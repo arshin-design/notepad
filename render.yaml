@@ -22,8 +22,5 @@ services:
         fromDatabase:
           name: notepad-db
           property: connectionString
-      # JWT 비밀키 자동 생성
-      - key: JWT_SECRET
-        generateValue: true
       - key: NODE_VERSION
         value: "20"

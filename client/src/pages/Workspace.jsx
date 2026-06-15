@@ -1,12 +1,9 @@
 // 메인 작업 화면 - 사이드바(노트북/태그) + 노트목록 + 에디터 3분할
 import { useEffect, useRef, useState, useCallback } from "react";
-import { useAuth } from "../context/AuthContext.jsx";
 import { api } from "../api.js";
 import Editor from "../components/Editor.jsx";
 
 export default function Workspace() {
-  const { user, logout } = useAuth();
-
   const [notebooks, setNotebooks] = useState([]);
   const [tags, setTags] = useState([]);
   const [notes, setNotes] = useState([]);
@@ -239,12 +236,6 @@ export default function Workspace() {
           {tags.length === 0 && <div className="nav-empty">태그가 없습니다</div>}
         </div>
 
-        <div className="sidebar-footer">
-          <span className="user-name">{user?.name || user?.email}</span>
-          <button className="logout-btn" onClick={logout}>
-            로그아웃
-          </button>
-        </div>
       </aside>
 
       {/* 가운데 노트 목록 */}

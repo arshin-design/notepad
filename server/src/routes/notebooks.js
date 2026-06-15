@@ -1,16 +1,12 @@
-// 노트북(폴더) 라우트
+// 노트북(폴더) 라우트 (인증 없음)
 import { Router } from "express";
 import prisma from "../prisma.js";
-import { authRequired } from "../middleware/auth.js";
 
 const router = Router();
-
-router.use(authRequired);
 
 // 노트북 목록 (각 노트북의 노트 개수 포함)
 router.get("/", async (req, res) => {
   const notebooks = await prisma.notebook.findMany({
-    where: { userId: req.userId },
     orderBy: { createdAt: "asc" },
     include: { _count: { select: { notes: true } } },
   });
@@ -25,7 +21,7 @@ router.post("/", async (req, res) => {
   }
 
   const notebook = await prisma.notebook.create({
-    data: { name: name.trim(), userId: req.userId },
+    data: { name: name.trim() },
   });
   return res.status(201).json(notebook);
 });
@@ -33,8 +29,8 @@ router.post("/", async (req, res) => {
 // 노트북 이름 수정
 router.put("/:id", async (req, res) => {
   const { name } = req.body || {};
-  const existing = await prisma.notebook.findFirst({
-    where: { id: req.params.id, userId: req.userId },
+  const existing = await prisma.notebook.findUnique({
+    where: { id: req.params.id },
   });
   if (!existing) {
     return res.status(404).json({ error: "노트북을 찾을 수 없습니다." });
@@ -49,8 +45,8 @@ router.put("/:id", async (req, res) => {
 
 // 노트북 삭제 (속한 노트는 삭제되지 않고 노트북 소속만 해제됨)
 router.delete("/:id", async (req, res) => {
-  const existing = await prisma.notebook.findFirst({
-    where: { id: req.params.id, userId: req.userId },
+  const existing = await prisma.notebook.findUnique({
+    where: { id: req.params.id },
   });
   if (!existing) {
     return res.status(404).json({ error: "노트북을 찾을 수 없습니다." });

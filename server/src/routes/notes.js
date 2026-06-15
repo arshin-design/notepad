@@ -1,14 +1,11 @@
-// 노트 라우트 - CRUD + 검색 + 노트북/태그 필터
+// 노트 라우트 - CRUD + 검색 + 노트북/태그 필터 (인증 없음)
 import { Router } from "express";
 import prisma from "../prisma.js";
-import { authRequired } from "../middleware/auth.js";
 
 const router = Router();
 
-router.use(authRequired);
-
 // 태그 이름 배열을 받아 (없으면 생성하여) 태그 id 배열로 변환한다
-async function resolveTagIds(userId, tagNames) {
+async function resolveTagIds(tagNames) {
   if (!Array.isArray(tagNames) || tagNames.length === 0) {
     return [];
   }
@@ -18,10 +15,10 @@ async function resolveTagIds(userId, tagNames) {
 
   const ids = [];
   for (const name of names) {
-    // 사용자별 태그는 (userId, name) 으로 유일하므로 upsert 사용
+    // 태그는 name 으로 유일하므로 upsert 사용
     const tag = await prisma.tag.upsert({
-      where: { userId_name: { userId, name } },
-      create: { userId, name },
+      where: { name },
+      create: { name },
       update: {},
     });
     ids.push(tag.id);
@@ -33,7 +30,7 @@ async function resolveTagIds(userId, tagNames) {
 router.get("/", async (req, res) => {
   const { q, notebookId, tagId } = req.query;
 
-  const where = { userId: req.userId };
+  const where = {};
 
   if (notebookId) {
     where.notebookId = notebookId;
@@ -60,8 +57,8 @@ router.get("/", async (req, res) => {
 
 // 단일 노트 조회
 router.get("/:id", async (req, res) => {
-  const note = await prisma.note.findFirst({
-    where: { id: req.params.id, userId: req.userId },
+  const note = await prisma.note.findUnique({
+    where: { id: req.params.id },
     include: { tags: true, notebook: { select: { id: true, name: true } } },
   });
   if (!note) {
@@ -74,13 +71,12 @@ router.get("/:id", async (req, res) => {
 router.post("/", async (req, res) => {
   const { title, content, notebookId, tags } = req.body || {};
 
-  const tagIds = await resolveTagIds(req.userId, tags);
+  const tagIds = await resolveTagIds(tags);
 
   const note = await prisma.note.create({
     data: {
       title: (title || "").trim() || "제목 없음",
       content: content || "",
-      userId: req.userId,
       notebookId: notebookId || null,
       tags: { connect: tagIds.map((id) => ({ id })) },
     },
@@ -91,8 +87,8 @@ router.post("/", async (req, res) => {
 
 // 노트 수정
 router.put("/:id", async (req, res) => {
-  const existing = await prisma.note.findFirst({
-    where: { id: req.params.id, userId: req.userId },
+  const existing = await prisma.note.findUnique({
+    where: { id: req.params.id },
   });
   if (!existing) {
     return res.status(404).json({ error: "노트를 찾을 수 없습니다." });
@@ -112,7 +108,7 @@ router.put("/:id", async (req, res) => {
   }
   // tags 가 제공되면 태그를 전부 새 목록으로 교체한다
   if (tags !== undefined) {
-    const tagIds = await resolveTagIds(req.userId, tags);
+    const tagIds = await resolveTagIds(tags);
     data.tags = { set: tagIds.map((id) => ({ id })) };
   }
 
@@ -126,8 +122,8 @@ router.put("/:id", async (req, res) => {
 
 // 노트 삭제
 router.delete("/:id", async (req, res) => {
-  const existing = await prisma.note.findFirst({
-    where: { id: req.params.id, userId: req.userId },
+  const existing = await prisma.note.findUnique({
+    where: { id: req.params.id },
   });
   if (!existing) {
     return res.status(404).json({ error: "노트를 찾을 수 없습니다." });

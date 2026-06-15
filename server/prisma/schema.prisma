@@ -1,4 +1,4 @@
-// Prisma 스키마 - PostgreSQL 사용
+// Prisma 스키마 - PostgreSQL 사용 (인증 없는 단일 사용자 메모장)
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,31 +8,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// 사용자
-model User {
-  id        String     @id @default(cuid())
-  email     String     @unique
-  password  String // bcrypt 해시
-  name      String?
-  createdAt DateTime   @default(now())
-
-  notebooks Notebook[]
-  notes     Note[]
-  tags      Tag[]
-}
-
 // 노트북 (폴더)
 model Notebook {
   id        String   @id @default(cuid())
   name      String
   createdAt DateTime @default(now())
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   notes Note[]
-
-  @@index([userId])
 }
 
 // 노트
@@ -43,28 +25,18 @@ model Note {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   notebookId String?
   notebook   Notebook? @relation(fields: [notebookId], references: [id], onDelete: SetNull)
 
   tags Tag[]
 
-  @@index([userId])
   @@index([notebookId])
 }
 
 // 태그
 model Tag {
   id   String @id @default(cuid())
-  name String
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name String @unique
 
   notes Note[]
-
-  @@unique([userId, name])
-  @@index([userId])
 }

@@ -1,4 +1,4 @@
-// 메모장 백엔드 진입점
+// 메모장 백엔드 진입점 (인증 없는 단일 사용자 메모장)
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
@@ -6,7 +6,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import fs from "node:fs";
 
-import authRoutes from "./routes/auth.js";
 import notebookRoutes from "./routes/notebooks.js";
 import noteRoutes from "./routes/notes.js";
 import tagRoutes from "./routes/tags.js";
@@ -24,7 +23,6 @@ app.get("/api/health", (req, res) => {
 });
 
 // API 라우트
-app.use("/api/auth", authRoutes);
 app.use("/api/notebooks", notebookRoutes);
 app.use("/api/notes", noteRoutes);
 app.use("/api/tags", tagRoutes);
@@ -43,6 +41,11 @@ if (fs.existsSync(clientDist)) {
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({ error: "서버 오류가 발생했습니다." });
+});
+
+// 예기치 못한 비동기 오류(예: DB 일시 단절)로 프로세스가 죽지 않도록 안전망
+process.on("unhandledRejection", (reason) => {
+  console.error("처리되지 않은 비동기 오류:", reason);
 });
 
 const PORT = process.env.PORT || 5000;

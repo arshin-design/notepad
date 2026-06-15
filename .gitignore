@@ -21,3 +21,7 @@ Thumbs.db
 
 # Prisma
 prisma/*.db
+
+# 로컬 실행 전용 (임베디드 Postgres 데이터 / 실행기)
+.pgdata/
+localrun.cjs

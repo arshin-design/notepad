@@ -1,37 +1,14 @@
-// 백엔드 API 호출 헬퍼
-
-const TOKEN_KEY = "notepad_token";
-
-export function getToken() {
-  return localStorage.getItem(TOKEN_KEY);
-}
-
-export function setToken(token) {
-  if (token) {
-    localStorage.setItem(TOKEN_KEY, token);
-  } else {
-    localStorage.removeItem(TOKEN_KEY);
-  }
-}
+// 백엔드 API 호출 헬퍼 (인증 없음)
 
 // 공통 요청 함수
 async function request(method, url, body) {
   const headers = { "Content-Type": "application/json" };
-  const token = getToken();
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
 
   const res = await fetch(`/api${url}`, {
     method,
     headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
-
-  // 인증 만료 시 토큰 제거
-  if (res.status === 401) {
-    setToken(null);
-  }
 
   let data = null;
   const text = await res.text();
